@@ -24,12 +24,14 @@ This repository aims to capture the works done in 5-day workshop of Adavance Phy
 
 Core :: A core is an area in the chip where the fundamental logic of the design is placed. It encapsulates all the combinational circuit, soft and hard IPs, and nets.
 Die ::
-Die is an area of chip that encapsulates the core and IO pads.
+Die is an area of chip that encapsulates the core and IO pads. Die is imprinted multiple times along the silicon area or wafer to increase the throughput.
 IO Pads ::
 IO pads are the pins that act as the source of communication between core and the outside world. Pad cells surround the rectangular metal patches where external bonds are made. input,output and power pad.
+
+image::ic_components.png[]
+
 IPs ::
 Foundary IPs are manually designed or need some human interference (or intelligence) essentially to define and create them like SRAM, ADC, DAC, PLLs.
-
 PDKs::
 PDKs are interface between foundary and design engineers. PDKs contains set of files to model fabrication process for the design tools used to design IC like device models, DRC, LVS, Physical extraction, layers, LEF, standard cell libraries, timing libraries etc. SkyWater 130nm is the PDK used in this workshop specifically sky130_fd_sc_hd and openLANE is built around this PDK.
 
@@ -39,7 +41,7 @@ Applications and softwares running on like PCs and laptops are implemented in la
 === RTL2GDS OpenLANE ASIC Flow
 OpenLANE is an automated RTL to GDSII flow. It is based on several open source components including OpenROAD, Yosys, Magic, Netgen, Fault, OpenPhySyn, CVC, SPEF-Extractor, CU-GR, Klayout and custom methodology scripts for design exploration and optimization.
 
-image::design_flow.png[700, 700, align="center"]
+image::design_flow.png[]
 
 OpenLANE is run as an container inside docker.
 For OpenLANE setup refer :
