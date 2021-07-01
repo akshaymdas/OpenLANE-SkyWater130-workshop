@@ -1,0 +1,118 @@
+= Advance Physical Design using OpenLANE and SkyWater 130nm PDK
+:author: Akshay Murali Das
+:email: akshaymdas@gmail.com
+:toc-title: Table of Contents
+:toc: left
+:toclevels: 2
+:imagesdir: images
+:icons: font
+:source-highlighter: coderay
+:sectnums:
+
+This repository aims to capture the works done in 5-day workshop of Adavance Physical Design using OpenLANE/SkyWater130. The workshop helps to familiarise with the efabless OpenLANE VLSI design flow RTL2GDS and the Skywater 130nm PDK. OpenLANE is an open source VLSI flow built around open source tools with the goal to produce clean GDSII with no human intervention("no human in the loop"). PicoRV32 is a CPU core that implements the RISC-V RV32IMC Instruction Set which is used as an example in this course.
+
+== Course Content
+** *Day 1*
+    * Introduction to IC Design components and terminologies
+    * Software application to hardware execution 
+    * RTL2GDS OpenLANE ASIC Flow 
+    * Open source EDA tools familiarisation
+
+== DAY 1
+
+=== Introduction to IC Design components and terminologies
+
+Core :: A core is an area in the chip where the fundamental logic of the design is placed. It encapsulates all the combinational circuit, soft and hard IPs, and nets.
+Die ::
+Die is an area of chip that encapsulates the core and IO pads.
+IO Pads ::
+IO pads are the pins that act as the source of communication between core and the outside world. Pad cells surround the rectangular metal patches where external bonds are made. input,output and power pad.
+IPs ::
+Foundary IPs are manually designed or need some human interference (or intelligence) essentially to define and create them like SRAM, ADC, DAC, PLLs.
+
+PDKs::
+PDKs are interface between foundary and design engineers. PDKs contains set of files to model fabrication process for the design tools used to design IC like device models, DRC, LVS, Physical extraction, layers, LEF, standard cell libraries, timing libraries etc. SkyWater 130nm is the PDK used in this workshop specifically sky130_fd_sc_hd and openLANE is built around this PDK.
+
+=== Software application to hardware execution
+Applications and softwares running on like PCs and laptops are implemented in languages like C, C++, Python, Java, .NET etc.These applications needs to be converted to bitstream using the compiler and assembler which is understandable the core. Compiliers are used for this purpose which generates bitstream based on Instruction set architecure of the native processor. The core is implemented using HDL. 
+
+=== RTL2GDS OpenLANE ASIC Flow
+OpenLANE is an automated RTL to GDSII flow. It is based on several open source components including OpenROAD, Yosys, Magic, Netgen, Fault, OpenPhySyn, CVC, SPEF-Extractor, CU-GR, Klayout and custom methodology scripts for design exploration and optimization.
+
+image::design_flow.png[700, 700, align="center"]
+
+OpenLANE is run as an container inside docker.
+For OpenLANE setup refer :
+https://github.com/The-OpenROAD-Project/OpenLane[OpenLANE]
+
+The main commands used in openLANE design flow in interactive mode are:
+
+```
+prep -design <design> -tag <tag> -config <config> -init_design_config -overwrite similar to the command line arguments, design is required and the rest is optional
+run_synthesis
+run_floorplan
+run_placement
+run_cts
+run_routing
+write_powered_verilog followed by set_netlist $::env(lvs_result_file_tag).powered.v
+run_magic
+run_magic_spice_export
+run_magic_drc
+run_lvs
+run_antenna_check
+```
+=== Open source EDA tools familiarisation
+Command to run openlane, needs to executed from directory where openlane is installed:
+```
+akshaym@openlane-workshop-03:~/Desktop/work/tools/openlane_working_dir/openlane$ docker run -it -v $(pwd):/openLANE_flow -v $PDK_ROOT:$PDK_ROOT -e PDK_ROOT=$PDK_ROOT -u $(id -u $USER):$(id -g $USER) efabless/openlane:v0.21
+bash-4.2$ 
+```
+To run in interactive mode (step by step mode)
+```
+bash-4.2$ ./flow.tcl -interactive
+```
+image::interactive_mode.png[]
+
+Package import and check::
+To import and check whether required openLANE package is installed
+```
+% package require openlane
+```
+image::package_openlane.png[]
+
+Prepare design::
+To prepare and setup the design
+```
+% prep -design picorv32a
+```
+image::prep_design.png[]
+
+Preparation step basically sets up the directory structure, merges the technology LEF (.tlef) and cell LEF(.lef) into one. Tech LEF contains the layer informations and cell LEF contains the cell informations.
+All the designs are placed under the designs directory for openLANE flow.
+Directory structure of picrorv32a before and after executing prep command.
+
+image::picorv32a_directory.png[]
+image::prep_design_directory_structure.png[]
+
+[horizontal]
+src:: contains verilog files and constraints file
+config.tcl:: contains the configurations used by openLANE
+
+image::design_config.png[]
+
+Synthesis design::
+To synthesize the design
+```
+% run_synthesis
+```
+[horizontal]
+yosys:: Performs RTL synthesis
+abc :: Performs technology mapping
+OpenSTA :: Peforms static timing analysis on the resulting netlist to generate timing reports
+
+image::syn_design1.png[]
+image::syn_design2.png[]
+
+Synthesis logs and report will be captured under runs directory.
+
+image::syn_design3.png[]
