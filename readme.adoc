@@ -200,6 +200,12 @@ Global placement assigns general locations to movable objects. Some overlaps are
 Detailed placement refines object locations to legal cell sites and enforces non-overlapping constraints.
 Detailed placement determines the achievable quality of the subsequent routing stages.
 
+[horizontal]
+`*RePLace*`:: Performs global placement
+`*Resizer*`::  Performs optional optimizations on the design
+`*OpenPhySyn*`:: Performs timing optimizations on the design
+`*OpenDP*`:: Performs detailed placement to legalize the globally placed components
+
 To run placement phase
 ```
 % run_placement
