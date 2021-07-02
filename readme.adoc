@@ -6,7 +6,7 @@
 :toclevels: 2
 :imagesdir: images
 :icons: font
-:source-highlighter: coderay
+:source-highlighter: rouge
 :sectnums:
 
 This repository aims to capture the works done in 5-day workshop of Adavance Physical Design using OpenLANE/SkyWater130. The workshop helps to familiarise with the efabless OpenLANE VLSI design flow RTL2GDS and the Skywater 130nm PDK. OpenLANE is an open source VLSI flow built around open source tools with the goal to produce clean GDSII with no human intervention("no human in the loop"). PicoRV32 is a CPU core that implements the RISC-V RV32IMC Instruction Set which is used as an example in this course.
@@ -18,21 +18,28 @@ This repository aims to capture the works done in 5-day workshop of Adavance Phy
     * RTL2GDS OpenLANE ASIC Flow 
     * Open source EDA tools familiarisation
 
-== DAY 1
+**  *Day 2*
+    * Chip floorplanning
+    * Placement
+    * Standard cell design
+    * Standard cell characterization
+
+== Day 1
 
 === Introduction to IC Design components and terminologies
 
-Core :: A core is an area in the chip where the fundamental logic of the design is placed. It encapsulates all the combinational circuit, soft and hard IPs, and nets.
-Die ::
+`*Core*`::
+A core is an area in the chip where the fundamental logic of the design is placed. It encapsulates all the combinational circuit, soft and hard IPs, and nets.
+`*Die*` ::
 Die is an area of chip that encapsulates the core and IO pads. Die is imprinted multiple times along the silicon area or wafer to increase the throughput.
-IO Pads ::
+`*IO Pads*`::
 IO pads are the pins that act as the source of communication between core and the outside world. Pad cells surround the rectangular metal patches where external bonds are made. input,output and power pad.
 
 image::ic_components.png[]
 
-IPs ::
+`*IPs*` ::
 Foundary IPs are manually designed or need some human interference (or intelligence) essentially to define and create them like SRAM, ADC, DAC, PLLs.
-PDKs::
+`*PDKs*`::
 PDKs are interface between foundary and design engineers. PDKs contains set of files to model fabrication process for the design tools used to design IC like device models, DRC, LVS, Physical extraction, layers, LEF, standard cell libraries, timing libraries etc. SkyWater 130nm is the PDK used in this workshop specifically sky130_fd_sc_hd and openLANE is built around this PDK.
 
 === Software application to hardware execution
@@ -45,7 +52,23 @@ image::design_flow.png[]
 
 OpenLANE is run as an container inside docker.
 For OpenLANE setup refer :
-https://github.com/The-OpenROAD-Project/OpenLane[OpenLANE]
+https://github.com/The-OpenROAD-Project/OpenLane[`*OpenLANE*`]
+
+OpenLANE integrated several key open source tools over the execution stages:
+[horizontal]
+`*RTL Synthesis, Technology Mapping, and Formal Verification*`::  yosys + abc
+`*Static Timing Analysis*`:: OpenSTA
+`*Floor Planning*`:: init_fp, ioPlacer, pdn and tapcell
+Placement: RePLace (Global), Resizer and OpenPhySyn (Optimizations), and OpenDP (Detailed)
+`*Clock Tree Synthesis*`:: TritonCTS
+`*Fill Insertion*`:: OpenDP/filler_placement
+`*Routing*`:: FastRoute or CU-GR (Global) and TritonRoute (Detailed)
+`*SPEF Extraction*`:: SPEF-Extractor
+`*GDSII Streaming out*`:: Magic and Klayout
+`*DRC Checks*`:: Magic and Klayout
+`*LVS checks*`:: Netgen
+`*Antenna Checks*`:: Magic
+`*Circuit Validity Checker*`:: CVC
 
 The main commands used in openLANE design flow in interactive mode are:
 
@@ -75,14 +98,14 @@ bash-4.2$ ./flow.tcl -interactive
 ```
 image::interactive_mode.png[]
 
-Package import and check::
+`*Package import and check*`::
 To import and check whether required openLANE package is installed
 ```
 % package require openlane
 ```
 image::package_openlane.png[]
 
-Prepare design::
+`*Prepare design*`::
 To prepare and setup the design
 ```
 % prep -design picorv32a
@@ -97,20 +120,26 @@ image::picorv32a_directory.png[]
 image::prep_design_directory_structure.png[]
 
 [horizontal]
-src:: contains verilog files and constraints file
-config.tcl:: contains the configurations used by openLANE
+`*src*`:: contains verilog files and constraints file
+`*config.tcl*`:: contains the configurations used by openLANE
+
+There are three configuration files:
+
+* Each tool used in the process flow has a configuration tcl file under PDK/sky130A/libs.tech/<tool_name>/*.tcl
+* Each design will have its own config.tcl file
+* Each design will have its own pdk specific tcl file, sky130A_sky130_fd_sc_hd_config.tcl which has the highest precedence.
 
 image::design_config.png[]
 
-Synthesis design::
+`*Synthesis design*`::
 To synthesize the design
 ```
 % run_synthesis
 ```
 [horizontal]
-yosys:: Performs RTL synthesis
-abc :: Performs technology mapping
-OpenSTA :: Peforms static timing analysis on the resulting netlist to generate timing reports
+`*yosys*`:: Performs RTL synthesis
+`*abc*`:: Performs technology mapping
+`*OpenSTA*`:: Peforms static timing analysis on the resulting netlist to generate timing reports
 
 image::syn_design1.png[]
 image::syn_design2.png[]
@@ -118,3 +147,91 @@ image::syn_design2.png[]
 Synthesis logs and report will be captured under runs directory.
 
 image::syn_design3.png[]
+
+== Day 2
+
+=== Chip floorplanning
+
+In floorplanning phase deals with setting die area, core area, core utilization factor, aspect ratio, placing of macros, power distribution networks and placement of IO pins.
+
+`*Aspect Ratio*`:: Specifies the shape of the chip, given by ratio of height to width of the core area. Aspect ratio of 1 indicates square shape else rectangle.
+`*Utilization Factor*`:: Specifies the amount of area taken by the netlist, given by ratio of area of netlist to area of the core. For placement optimization and realizable routing utilization factor is kept to 0.5 to 0.7 range.
+`*Preplaced cells*`:: Preplaced cells have fixed location on the chip and cannot be moved around in placement phase. The placement of these macros are considered while deciding the placement of standard cells by floor planning tools.Macros can be used several times in a design. Typical examples of macros are memory blocks, clock gating cells, comparators etc.
+`*Decoupling capacitors*`:: Decaps are used with preplaced cells to compensate the voltage drop along the long wires and nets which affects the noise margin. Decaps are charged to the supply voltage and used as the supply source for the logic level transitions LOW to HIGH. It decouples the circuit from main supply.
+`*Power planning*`:: Power planning means to provide power to the every macros, standard cells, and all other cells are present in the design.Power planning is a step which typically is done with floor planning in which power grid network is created to distribute power to each part of the design equally to mitigate voltage droop and ground bounce issues. In openLANE flow, PDN is done before routing phase.
+`*Pin placement*`:: Pins placement also done in floor planning phase and logical cell placement blockage is added to prevent PnR tools from adding cells in this region.
+
+`*Floor planning*`::
+To run floorplanning phase
+```
+% run_floorplan
+```
+image::floor_plan_1.png[]
+image::floor_plan_2.png[]
+
+Floor planning phase generate DEF file which contains core area and placement details of standard cells.
+[horizontal]
+`*init_fp*`:: Defines the core area for the macro as well as the rows (used for placement) and the tracks (used for routing)
+`*ioplacer*`:: Places the macro input and output ports
+`*pdn*`:: Generates the power distribution network
+`*tapcell*`:: Inserts welltap and decap cells in the floorplan
+
+image::floor_plan_4.png[]
+image::floor_plan_3.png[]
+
+DEF file generated by floorplan phase can be utilized by magic tool to get the floorplan view which requires 3 configuration files:
+* Magic technology file (sky130A.tech)
+* DEF file from floorplan phase
+* Merged LEF file from preparation phase
+
+```
+akshaym@openlane-workshop-03:~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs/30-06_16-01/results/floorplan$ magic -T $PDK/sky130A/libs.tech/magic/sky130A.tech lef read ../../tmp/merged.lef def read picorv32a.floorplan.def &
+```
+image::floor_plan_5.png[]
+image::floor_plan_6.png[]
+image::floor_plan_7.png[]
+
+=== Placement
+Placement determine the locations of standard cells or logic elements within each block.Some circuit elements may have fixed locations while others are movable.
+
+`*Global placement*`::
+Global placement assigns general locations to movable objects. Some overlaps are allowed between placed objects.
+`*Detailed placement*`::
+Detailed placement refines object locations to legal cell sites and enforces non-overlapping constraints.
+Detailed placement determines the achievable quality of the subsequent routing stages.
+
+To run placement phase
+```
+% run_placement
+```
+image::placement_1.png[]
+
+DEF file generated by placement phase can be utilized by magic tool to get the placement view which requires 3 configuration files:
+
+* Magic technology file (sky130A.tech)
+* DEF file from placement phase
+* Merged LEF file from preparation phase
+
+image::placement_3.png[]
+image::placement_2.png[]
+
+=== Standard cell design
+Standard cell design flow consists of 3 phases
+
+[horizontal]
+`*Inputs*`:: PDKs, DRC and LVS rules, SPICE models, library & user-defined specs.
+`*Design Steps*`::  Involves circuit design, layout design, characterization using GUNA tool. Characterization involves timing, power and noise characterizations.
+`*Outputs*`::  CDL (Circuit Description Language), GDSII, LEF(Library Exchange Format), extracted Spice netlist (.cir), timing, noise, power libs.
+
+=== Standard cell characterization
+
+Standard cell library has cells with different drive strength and functionalities.These cells are characterized by using GUNA tool. 
+
+* The standard cell characterization flow involves
+* Link model file of CMOS containing property definitions
+* Specify process corners for the cell to be characterized
+* Specify cell delay and slew thresholds percentages
+* Specify timing and power tables
+* Read the parasitic extracted netlist
+* Apply stimulus
+* Provide necessary simulation commands
