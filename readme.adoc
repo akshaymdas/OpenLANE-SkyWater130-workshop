@@ -24,6 +24,10 @@ This repository aims to capture the works done in 5-day workshop of Adavance Phy
     * Standard cell design
     * Standard cell characterization
 
+** *Day 3*
+    * 16 Mask CMOS fabrication process
+    * Design and characterize library cell CMOS inverter
+
 == Day 1
 
 === Introduction to IC Design components and terminologies
@@ -268,3 +272,64 @@ The standard cell characterization flow involves
 * Provide necessary simulation commands
 
 Apply the entire flow to GUNA tool to generate timing, noise and power models.
+
+== Day 3
+
+Build basic cmos inverter netlist spice deck file using ngspice and perform dc and transient analysis. Understanding basic terminologies of cmos inverter like static and dynamic characteristics.
+
+[horizontal]
+`*Static characteristics*`:: `Switching threshold, Vil, Vol, Vil, Voh and noise margins`.
+`*Dyanamic characteristics*`:: `Propagation delays, rise time and fall time`.
+[]
+
+`*Simulation steps on ngspice*`::
+* Source the spice deck file by `source *.cir`
+* Run the file by `run`
+* View the available plots mentioned in spice deck file by `setplot` and select desired plot by entering in the window
+* See the nodes available for plotting by `dispplay`
+* Obtain output waveform by `plot out vs  in` for VTC or `plot out vs time`, out and in are considered as the nodes.
+
+=== Design and characterize library cell CMOS inverter
+
+Magic layout view to cmos inverter::
+To get the cell files refer https://github.com/nickson-jose/vsdstdcelldesign[`standard cell characterization`]
+
+```
+akshaym@openlane-workshop-03:~/Desktop/work/tools/openlane_working_dir/openlane/vsdstdcelldesign$ magic -T $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech sky130_inv.mag &
+```
+image::cmos_inverter_magic_layout_view.png[]
+image::cmos_inverter_magic_layout_view_1.png[]
+
+To extract the parasitics and characterize the cell design use below commands in tkcon window.
+```
+extract all
+ext2spice cthresh 0 rthresh 0
+ext2spice
+```
+image::spice_extraction.png[]
+image::spice_extraction_1.png[]
+Extracted spice deck file from the layout
+
+image::spice_deck.png[]
+
+Few modifications needs to be done in spice deck file
+
+* Scale needs to be aligned with the layout grid size and check the model name from pshort.lib and nshort.lib
+* Specify power supply 
+* Apply stimulus
+* Perform transient analysis
+
+image::magic_tool_grid_size.png[]
+image::modifiled_spice_deck.png[]
+
+To run the simulation in ngspice, invoke the ngspice tool with the modified extracted spice file as input
+```
+akshaym@openlane-workshop-03:~/Desktop/work/tools/openlane_working_dir/openlane/vsdstdcelldesign$ ngspice sky130_inv.spice
+```
+image::ngspice_output.png[]
+
+To plot transient analysis output, where y - output node and a - input node
+```
+plot y vs time a
+```
+image::ngspice_transient_output.png[]
