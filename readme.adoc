@@ -510,9 +510,9 @@ Now run openROAD and do a timing analysis as mentioned above.
 `hold_slack`:: 0.1828 ns
 `setup_slack`:: 4.7495 ns
 
-Including large size clock buffers in clock path improves slack by area increases.
-To check the clock skew
+Including large size clock buffers in clock path improves slack but area increases.
 
+To check the clock skew
 ```
 % report_clock_skew -hold
 Clock clk
