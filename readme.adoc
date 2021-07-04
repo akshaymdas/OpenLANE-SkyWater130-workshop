@@ -612,3 +612,7 @@ To generate GDSII file
 image::gds2.png[]
 
 `gds` file will be generated at location `$OPENLANE_ROOT/designs/picorv32a/runs/03-07_16-12/results/magic/picorv32a.gds`
+
+== Acknowledgement
+* https://github.com/kunalg123[Kunal Ghosh]
+* https://github.com/nickson-jose[Nickson Jose]
