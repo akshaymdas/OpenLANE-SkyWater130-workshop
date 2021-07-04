@@ -38,6 +38,7 @@ This repository aims to capture the works done in 5-day workshop of Adavance Phy
     * Power distribution network
     * Routing
     * SPEF extraction
+    * GDSII
 
 == Day 1
 
@@ -590,14 +591,24 @@ image::routing_5.png[]
 
 After routing magic tool can be used to get routing view
 ```
-akshaym@openlane-workshop-03:~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs$ magic -T $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech lef read 03-07_16-12/tmp/merged.lef def 03-07_16-12/results/routing/picorv32a.def &
+akshaym@openlane-workshop-03:~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs$ magic -T $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech lef read 03-07_16-12/tmp/merged.lef def read 03-07_16-12/results/routing/picorv32a.def &
 ```
 image::routing_6.png[]
 image::routing_7.png[]
 
-`*SPEF Extraction*`::
+=== SPEF Extraction
 After routing has been completed interconnect parasitics can be extracted to perform sign-off post-route STA analysis. The parasitics are extracted into a SPEF file using SPEF-Extractor.
 
 `spef` file will be generated after `run_routing` command at location `$OPENLANE_ROOT/designs/picorv32a/runs/03-07_16-12/results/routing/picorv32a.spef`
 
 image::spef_extraction.png[]
+
+=== GDSII
+GDSII files are usually the final output product of the IC design cycle and are given to silicon foundries for IC fabricationIt is a binary file format representing planar geometric shapes, text labels, and other information about the layout in hierarchical form.
+To generate GDSII file
+```
+% run_magic
+```
+image::gds2.png[]
+
+`gds` file will be generated at location `$OPENLANE_ROOT/designs/picorv32a/runs/03-07_16-12/results/magic/picorv32a.gds`
