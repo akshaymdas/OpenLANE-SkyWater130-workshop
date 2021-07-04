@@ -28,6 +28,12 @@ This repository aims to capture the works done in 5-day workshop of Adavance Phy
     * 16 Mask CMOS fabrication process
     * Design and characterize library cell CMOS inverter
 
+** *Day 4*
+    * Introduction and generation of LEF files using magic tool
+    * Custom cells in openLANE
+    * Fixing slack violations
+    * CTS
+
 == Day 1
 
 === Introduction to IC Design components and terminologies
@@ -333,3 +339,194 @@ To plot transient analysis output, where y - output node and a - input node
 plot y vs time a
 ```
 image::ngspice_transient_output.png[]
+
+== Day 4
+
+=== Introduction and generation of LEF files using magic tool
+
+The entire layout information of the block(macro or standard cell) is not required for the PnR tool to place and route.It requires the PR boundary(bounding box) and pin positions.These minimal and abstract information of the block is provided to PnR tool by the LEF(Library Exchange Format) file. LEF exposes only the necessary things need for the PnR tool and protecting the logic or intellectual property.
+
+[horizontal]
+`*Cell LEF*`::
+Abstract view of the cell which holds information about PR boundary, pin positions and metal layer information.
+`*Technology LEF*`::
+Holds information about the metal layers, via, DRC technology used by placer and router. 
+
+Below image gives idea regarding difference between layout and LEF.
+
+image::layout_vs_abstract.png[]
+
+Tracks are used in routing stages. Routes are metal traces which can go over the tracks. The information of horizontal and vertical tracks present in each layer is given in `tracks.info` file.
+
+image::tracks_info.png[]
+
+Horizontal track in li1 layer has an offset of 0.23um and pitch of 0.46um. Veritical track in li1 layer has an offset of 0.17um and pitch of 0.34um.
+
+`*Pin placement*`::
+ 
+To ensure the standard cell layout is done as per the requirement of PnR tool
+* ports must lie on the intersection of horizontal and vertical tracks. Ensure that in magic tool by aligning grid dimension with the track file.
+* cell width must be odd multiples of x pitch. Ensure that by counting the number of grid boxes along cell width.
+* cell height must be odd multiples of y pitch. Ensure that by counting the number of grid boxes along cell height.
+
+image::grid_allign_track.png[]
+
+The ports lie on the intersection of horizontal and vertical tracks ensure that route can reach the port from x as wells y direction. Ports are in li1(locali)layer.
+
+image::grid_allign_track1.png[]
+
+When extracting LEF file, these ports are what are defined as pins of the macro. These are done in magic tool by adding text with enabling port.
+
+image::lef_port.png[]
+
+A and Y is attached to locali layer and Vdd and Gnd attached to metal1 layer. To set port class and port attribute refer https://github.com/nickson-jose/vsdstdcelldesign[`standard cell characterization`]
+
+To extact LEF file
+```
+lef write
+```
+image::lef_extract.png[]
+image::lef_extract1.png[]
+image::lef_extract2.png[]
+image::lef_extract3.png[]
+
+=== Custom cells in openLANE
+
+To include the custom inverter cell into the openLANE flow
+
+* Copy the extracted LEF file from layout into `designs\picorv32a\src` directory along with `sky130_fd_sc_hd_slow/fast/typical.lib` from the reference repository. 
+
+image::openlan_flow_custom_cell.png[]
+
+Custom cell inverter characterization information is included in above mentioned libs.
+
+image::lib_with_custom_cell_characterization.png[]
+
+* modify `design\picorv32a\config.tcl`
+
+image::modified_config_tcl.png[]
+
+Now perform openLANE design flow
+```
+% package require openLANE 0.9
+% prep -design picorv32a -tag 03-07_16-04 -overwrite
+% set lefs [glob $::env(DESIGN_DIR)/src/*.lef]
+% add_lefs -src $lefs
+% run_synthesis
+% run_floorplan
+% run_placement
+```
+
+image::prep_deisgn_custom_openlane_flow.png[]
+image::openlan_flow_custom_cell_1.png[]
+image::openlan_flow_custom_cell_3.png[]
+image::openlan_flow_custom_cell_2.png[]
+image::custom_cell_magic_placement.png[]
+image::custom_cell_magic_placement_1.png[]
+
+ 
+STA tool is used to analyze the timing performance of the circuit.STA will report problems such as worst negative slack (WNS)and total negative slack (TNS). These refer to the worst path delay and total path delay in regards to setup timing constraint.Fixing slack violations are analyzed using OpenSTA tool. These analysis are performed out of the openLANE flow and once we get the slack in requried range, we save the enhanced netlist using `write_verilog` command and use this in openLANE flow to build clock tree and do further analysis in openROAD.
+
+
+For the design to be complete, the worst negative slack needs to be above or equal to 0. If the slack is  not within the range:
+
+* Review synthesis strategy in OpenLANE
+* Enable cell buffering
+* Perform manual cell replacement using the OpenSTA tool
+
+---
+All openLANE configuration parameters are mentioned in `*$OPENLANE_ROOT/configuration/README.md*`.
+
+---
+
+=== CTS
+
+The main concern in generation of clock tree is the clock skew, difference in arrival times of the clock for sequential elements across the design.To ensure timing constraints CTS will add buffers throughout the clock tree which will modify our netlist. This will generate new `def` file.
+
+To run clock tree synthesis
+```
+% run_cts
+```
+[horizontal]
+`*TritonCTS*`:: Synthesizes the clock distribution network (the clock tree)
+
+image::cts.png[]
+image::cts_2.png[]
+image::cts_1.png[]
+
+Further analysis of CTS in done in openROAD which is integrated in openLANE flow using openSTA tool.
+```
+% openroad
+```
+In openROAD the timing analysis is done by creating a db file from `lef` and `def` files. `lef` file won't change as it a tecnology file, `def` file changes when a new is added.
+
+```
+% read_lef /openLANE_flow/designs/picorv32a/runs/03-07_16-12/tmp/merged.lef
+% read_def /openLANE_flow/designs/picorv32a/runs/03-07_16-12/results/cts/picorv32a.cts.def
+% write_db picorv32a_cts.db
+```
+image::openroad_1.png[]
+This creates db file in `$OPENLANE_ROOT` directory.
+
+```
+% read_db picorv32a_cts.db
+% read_verilog /openLANE_flow/designs/picorv32a/runs/03-07_16-12/results/synthesis/picorv32a.synthesis_cts.v
+% read_liberty -max $::env(LIB_SLOWEST)
+% read_liberty -min $::env(LIB_FASTEST)
+% read_sdc /openLANE_flow/designs/picorv32a/src/my_base.sdc
+% set_propagated_clock [all_clocks]
+% report_checks -path_delay min_max -format full_clock_expanded -digits 4
+```
+
+We have done pre-CTS timing analysis to get setup and hold slack and post-CTS timing analysis to get setup and hold slack. 
+For typical corners (`LIB_SYN_COMPLETE` env variable which points to typical library) setup and hold slack are met.
+
+[horizontal]
+`hold slack`:: 0.0167 ns
+`setup slack`:: 4.5880 ns
+
+```
+% echo $::env(CTS_CLK_BUFFER_LIST)
+sky130_fd_sc_hd__clkbuf_1 sky130_fd_sc_hd__clkbuf_2 sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8
+```
+
+Trying removing `sky130_fd_sc_hd__clkbuf_1` from clock tree and do post cts timing analysis
+```
+% set ::env(CTS_CLK_BUFFER_LIST) [lreplace $::env(CTS_CLK_BUFFER_LIST) 0 0]
+sky130_fd_sc_hd__clkbuf_2 sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8
+% echo $::env(CTS_CLK_BUFFER_LIST)
+sky130_fd_sc_hd__clkbuf_2 sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8
+```
+
+```
+% echo $::env(CURRENT_DEF)
+/openLANE_flow/designs/picorv32a/runs/03-07_16-12/results/cts/picorv32a.cts.def
+% 
+% set ::env(CURRENT_DEF) /openLANE_flow/designs/picorv32a/runs/03-07_16-12/results/placement/picorv32a.placement.def
+```
+
+Now run openROAD and do a timing analysis as mentioned above.
+[horizontal]
+`hold_slack`:: 0.1828 ns
+`setup_slack`:: 4.7495 ns
+
+Including large size clock buffers in clock path improves slack by area increases.
+To check the clock skew
+
+```
+% report_clock_skew -hold
+Clock clk
+Latency      CRPR       Skew
+_35319_/CLK ^
+   1.31
+_34316_/CLK ^
+   0.80      0.00       0.51
+
+% report_clock_skew -setup
+Clock clk
+Latency      CRPR       Skew
+_35319_/CLK ^
+   1.31
+_34316_/CLK ^
+   0.80      0.00       0.51
+```
