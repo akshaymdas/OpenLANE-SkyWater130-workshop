@@ -569,10 +569,10 @@ image::pdn_1.png[]
 Routing is the stage where the interconnnections. This includes interconnections of standard cells, the macro pins, the pins of the block boundary or pads of the chip boundary. Logical connectivity is defined by netlist and design rules are defined in technology file are available to routing tool. In routing stage, metal and vias are used to create the electrical connections. 
 
 `*Global routing*`::
-Coarse-grain assignment of routes to routing regions. In global routing wire segments are tentatively assigned within the chip layout.
+Coarse-grain assignment of routes to routing regions. In global routing wire segments are tentatively assigned within the chip layout.
 
 `*Detailed routing*`::
-Fine-grain assignment of routes to routing tracks.During detailed routing, the wire segments are assigned to specific routing tracks.
+Fine-grain assignment of routes to routing tracks.During detailed routing, the wire segments are assigned to specific routing tracks.
 
 [horizontal]
 `*FastRoute*`:: Performs global routing to generate a guide file for the detailed router
