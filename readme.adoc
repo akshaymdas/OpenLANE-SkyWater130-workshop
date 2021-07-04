@@ -34,6 +34,11 @@ This repository aims to capture the works done in 5-day workshop of Adavance Phy
     * Fixing slack violations
     * CTS
 
+** *Day 5*
+    * Power distribution network
+    * Routing
+    * SPEF extraction
+
 == Day 1
 
 === Introduction to IC Design components and terminologies
@@ -530,3 +535,69 @@ _35319_/CLK ^
 _34316_/CLK ^
    0.80      0.00       0.51
 ```
+
+== Day 5
+
+=== Power distribution network
+
+Power planning is a step which typically is done with floorplanning in which power grid network is created to distribute power to each part of the design equally. In openLANE flow it is done before routing.
+
+Three levels of power distribution
+[horizontal]
+`*Rings*`:: Carries VDD and VSS around the chip
+`*Stripes*`:: Carries VDD and VSS from Rings across the chip
+`*Rails*`:: Connect VDD and VSS to the standard cell VDD and VSS.
+
+image::power_planning.png[]
+
+[horizontal]
+`*pdn*`:: Generates the power distribution network
+
+To run pdn
+```
+% gen_pdn
+```
+This generates new `def` file in `$OPENLANE_ROOT\designs\picorv32a\run\03-07_16-12/tmp/floorplan/19-pdn.def`
+
+image::pdn_2.png[]
+image::pdn_1.png[]
+
+=== Routing
+
+Routing is the stage where the interconnnections. This includes interconnections of standard cells, the macro pins, the pins of the block boundary or pads of the chip boundary. Logical connectivity is defined by netlist and design rules are defined in technology file are available to routing tool. In routing stage, metal and vias are used to create the electrical connections. 
+
+`*Global routing*`::
+Coarse-grain assignment of routes to routing regions. In global routing wire segments are tentatively assigned within the chip layout.
+
+`*Detailed routing*`::
+Fine-grain assignment of routes to routing tracks.During detailed routing, the wire segments are assigned to specific routing tracks.
+
+[horizontal]
+`*FastRoute*`:: Performs global routing to generate a guide file for the detailed router
+`*CU-GR*`:: Another option for performing global routing.
+`*TritonRoute*`:: Performs detailed routing
+`*SPEF-Extractor*`:: Performs SPEF extraction
+
+To run routing:
+```
+% run_routing
+```
+image::routing_1.png[]
+image::routing_2.png[]
+image::routing_3.png[]
+image::routing_4.png[]
+image::routing_5.png[]
+
+After routing magic tool can be used to get routing view
+```
+akshaym@openlane-workshop-03:~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs$ magic -T $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech lef read 03-07_16-12/tmp/merged.lef def 03-07_16-12/results/routing/picorv32a.def &
+```
+image::routing_6.png[]
+image::routing_7.png[]
+
+`*SPEF Extraction*`::
+After routing has been completed interconnect parasitics can be extracted to perform sign-off post-route STA analysis. The parasitics are extracted into a SPEF file using SPEF-Extractor.
+
+`spef` file will be generated after `run_routing` command at location `$OPENLANE_ROOT/designs/picorv32a/runs/03-07_16-12/results/routing/picorv32a.spef`
+
+image::spef_extraction.png[]
