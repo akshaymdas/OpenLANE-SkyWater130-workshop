@@ -555,9 +555,6 @@ Three levels of power distribution
 
 image::power_planning.png[]
 
-[horizontal]
-`*pdn*`:: Generates the power distribution network
-
 To run pdn
 ```
 % gen_pdn
