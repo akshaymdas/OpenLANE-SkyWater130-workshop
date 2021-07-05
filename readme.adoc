@@ -500,7 +500,7 @@ For typical corners (`LIB_SYN_COMPLETE` env variable which points to typical lib
 sky130_fd_sc_hd__clkbuf_1 sky130_fd_sc_hd__clkbuf_2 sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8
 ```
 
-Trying removing `sky130_fd_sc_hd__clkbuf_1` from clock tree and do post cts timing analysis
+Try removing `sky130_fd_sc_hd__clkbuf_1` from clock tree and do post cts timing analysis
 ```
 % set ::env(CTS_CLK_BUFFER_LIST) [lreplace $::env(CTS_CLK_BUFFER_LIST) 0 0]
 sky130_fd_sc_hd__clkbuf_2 sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8
