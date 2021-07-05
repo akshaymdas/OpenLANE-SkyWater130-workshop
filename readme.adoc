@@ -63,7 +63,7 @@ Foundary IPs are manually designed or need some human interference (or intellige
 PDKs are interface between foundary and design engineers. PDKs contains set of files to model fabrication process for the design tools used to design IC like device models, DRC, LVS, Physical extraction, layers, LEF, standard cell libraries, timing libraries etc. SkyWater 130nm is the PDK used in this workshop specifically sky130_fd_sc_hd and openLANE is built around this PDK.
 
 === Software application to hardware execution
-Applications and softwares running on like PCs and laptops are implemented in languages like C, C++, Python, Java, .NET etc.These applications needs to be converted to bitstream using the compiler and assembler which is understandable the core. Compiliers are used for this purpose which generates bitstream based on Instruction set architecure of the native processor. The core is implemented using HDL. 
+Applications and softwares running on like PCs and laptops are implemented in languages like C, C++, Python, Java, .NET etc.These applications needs to be converted to bitstream using the compiler and assembler which is understandable the core. Compilers are used for this purpose which generates bitstream based on Instruction set architecture of the native processor. The core is implemented using HDL. 
 
 === RTL2GDS OpenLANE ASIC Flow
 OpenLANE is an automated RTL to GDSII flow. It is based on several open source components including OpenROAD, Yosys, Magic, Netgen, Fault, OpenPhySyn, CVC, SPEF-Extractor, CU-GR, Klayout and custom methodology scripts for design exploration and optimization.
@@ -163,7 +163,7 @@ To synthesize the design
 [horizontal]
 `*yosys*`:: Performs RTL synthesis
 `*abc*`:: Performs technology mapping
-`*OpenSTA*`:: Peforms static timing analysis on the resulting netlist to generate timing reports
+`*OpenSTA*`:: Performs static timing analysis on the resulting netlist to generate timing reports
 
 image::syn_design1.png[]
 image::syn_design2.png[]
@@ -291,7 +291,7 @@ Apply the entire flow to GUNA tool to generate timing, noise and power models.
 
 == Day 3
 
-Build basic cmos inverter netlist spice deck file using ngspice and perform dc and transient analysis. Understanding basic terminologies of cmos inverter like static and dynamic characteristics.
+Build basic CMOS inverter netlist spice deck file using ngspice and perform dc and transient analysis. Understanding basic terminologies of CMOS inverter like static and dynamic characteristics.
 
 [horizontal]
 `*Static characteristics*`:: `Switching threshold, Vil, Vol, Vil, Voh and noise margins`.
@@ -370,7 +370,7 @@ Tracks are used in routing stages. Routes are metal traces which can go over the
 
 image::tracks_info.png[]
 
-Horizontal track in li1 layer has an offset of 0.23um and pitch of 0.46um. Veritical track in li1 layer has an offset of 0.17um and pitch of 0.34um.
+Horizontal track in li1 layer has an offset of 0.23um and pitch of 0.46um. Vertical track in li1 layer has an offset of 0.17um and pitch of 0.34um.
 
 `*Pin placement*`::
  
@@ -435,10 +435,10 @@ image::custom_cell_magic_placement.png[]
 image::custom_cell_magic_placement_1.png[]
 
  
-STA tool is used to analyze the timing performance of the circuit.STA will report problems such as worst negative slack (WNS)and total negative slack (TNS). These refer to the worst path delay and total path delay in regards to setup timing constraint.Fixing slack violations are analyzed using OpenSTA tool. These analysis are performed out of the openLANE flow and once we get the slack in requried range, we save the enhanced netlist using `write_verilog` command and use this in openLANE flow to build clock tree and do further analysis in openROAD.
+STA tool is used to analyze the timing performance of the circuit.STA will report problems such as worst negative slack (WNS)and total negative slack (TNS). These refer to the worst path delay and total path delay in regards to setup timing constraint.Fixing slack violations are analyzed using OpenSTA tool. These analysis are performed out of the openLANE flow and once we get the slack in required range, we save the enhanced netlist using `write_verilog` command and use this in openLANE flow to build clock tree and do further analysis in openROAD.
 
 
-For the design to be complete, the worst negative slack needs to be above or equal to 0. If the slack is  not within the range:
+For the design to be complete, the worst negative slack needs to be above or equal to 0. If the slack is not within the range:
 
 * Review synthesis strategy in OpenLANE
 * Enable cell buffering
@@ -468,7 +468,7 @@ Further analysis of CTS in done in openROAD which is integrated in openLANE flow
 ```
 % openroad
 ```
-In openROAD the timing analysis is done by creating a db file from `lef` and `def` files. `lef` file won't change as it a tecnology file, `def` file changes when a new is added.
+In openROAD the timing analysis is done by creating a db file from `lef` and `def` files. `lef` file won't change as it a technology file, `def` file changes when a new is added.
 
 ```
 % read_lef /openLANE_flow/designs/picorv32a/runs/03-07_16-12/tmp/merged.lef
@@ -605,7 +605,7 @@ After routing has been completed interconnect parasitics can be extracted to per
 image::spef_extraction.png[]
 
 === GDSII
-GDSII files are usually the final output product of the IC design cycle and are given to silicon foundries for IC fabricationIt is a binary file format representing planar geometric shapes, text labels, and other information about the layout in hierarchical form.
+GDSII files are usually the final output product of the IC design cycle and are given to silicon foundries for IC fabrication.It is a binary file format representing planar geometric shapes, text labels, and other information about the layout in hierarchical form.
 
 To generate GDSII file
 ```
